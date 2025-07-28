@@ -2,7 +2,6 @@ package com.example.blogpost.config;
 
 import com.example.blogpost.filter.JwtFilter;
 import com.example.blogpost.service.MyUserDetailsService;
-import com.example.blogpost.service.UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
