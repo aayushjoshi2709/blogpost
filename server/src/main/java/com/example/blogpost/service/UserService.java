@@ -2,12 +2,13 @@ package com.example.blogpost.service;
 
 import com.example.blogpost.model.User;
 import com.example.blogpost.repository.UserRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 
@@ -34,7 +35,7 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public HashMap<String, String> verify(User user) {
+    public HashMap<String, String> verify(User user) throws ResponseStatusException {
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
         if(authentication.isAuthenticated()){
             String token = jwtService.generateToken(user.getUsername());
@@ -42,7 +43,7 @@ public class UserService {
                         put("token", token);
                     }};
         }else {
-            throw new BadCredentialsException("Invalid credentials");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "The username or password is incorrect.");
         }
     }
 }

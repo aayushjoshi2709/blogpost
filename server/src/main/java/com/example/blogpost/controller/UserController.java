@@ -22,21 +22,11 @@ public class UserController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody User user){
-        try{
-            return new ResponseEntity<>(this.userService.registerUser(user), HttpStatus.CREATED);
-        }catch (Exception e){
-            System.err.println(e);
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+        return new ResponseEntity<>(this.userService.registerUser(user), HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody User user){
-        try{
-            return new ResponseEntity<>(this.userService.verify(user), HttpStatus.OK);
-        } catch (Exception e){
-            System.err.println(e);
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
+        return new ResponseEntity<>(this.userService.verify(user), HttpStatus.OK);
     }
 }
