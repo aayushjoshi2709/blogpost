@@ -31,11 +31,12 @@ public class BlogController {
         }
     }
 
-    @PostMapping("/")
+    @PostMapping("")
     public ResponseEntity<Blog> createBlog(@RequestBody Blog blog){
         try{
             return new ResponseEntity<>(this.blogService.create(blog), HttpStatus.CREATED);
         } catch (Exception e){
+            System.out.println(e);
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
     }
@@ -45,6 +46,7 @@ public class BlogController {
         try{
             return new ResponseEntity<>(this.blogService.update(blogId, blog), HttpStatus.ACCEPTED);
         } catch (Exception e){
+            System.out.println(e.getMessage());
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
@@ -52,6 +54,7 @@ public class BlogController {
     @DeleteMapping("/{blogId}")
     public ResponseEntity<Blog> deleteBlog(@PathVariable UUID blogId){
         try{
+            this.blogService.deleteById(blogId);
             return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e){
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);

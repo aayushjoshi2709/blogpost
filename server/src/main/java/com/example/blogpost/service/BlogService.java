@@ -1,17 +1,26 @@
 package com.example.blogpost.service;
 
 import com.example.blogpost.model.Blog;
+import com.example.blogpost.model.User;
+import com.example.blogpost.model.UserPrincipal;
 import com.example.blogpost.repository.BlogRepository;
+import org.springframework.context.ApplicationContext;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 public class BlogService {
-    public BlogRepository blogRepository;
+    public final BlogRepository blogRepository;
+    private final UserService userService;
 
-    BlogService(BlogRepository blogRepository) {
+    BlogService(BlogRepository blogRepository, UserService userService) {
         this.blogRepository = blogRepository;
+        this.userService = userService;
     }
 
     private Blog getBlogByID(UUID id) throws Exception{
@@ -31,6 +40,10 @@ public class BlogService {
     }
 
     public Blog create(Blog blog){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UserPrincipal userPrincipal = (UserPrincipal) auth.getPrincipal();
+        User user = userService.findByUsername(userPrincipal.getUsername());
+        blog.setUser(user);
         return this.blogRepository.save(blog);
     }
 
