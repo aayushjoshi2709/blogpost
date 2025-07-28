@@ -31,6 +31,19 @@ public class BlogService {
         return blog;
     }
 
+    private User getUserFromSecurityContext(){
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UserPrincipal userPrincipal = (UserPrincipal) auth.getPrincipal();
+        return userService.findByUsername(userPrincipal.getUsername());
+    }
+
+    private void checkBlogPostBelongsToUser(Blog currentBlog) throws Exception{
+        User user = getUserFromSecurityContext();
+        if(!currentBlog.getUser().getId().equals(user.getId())){
+            throw new Exception("Blog post does not belong to this user");
+        }
+    }
+
     public List<Blog> findAll(){
         return this.blogRepository.findAll();
     }
@@ -40,20 +53,19 @@ public class BlogService {
     }
 
     public Blog create(Blog blog){
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        UserPrincipal userPrincipal = (UserPrincipal) auth.getPrincipal();
-        User user = userService.findByUsername(userPrincipal.getUsername());
-        blog.setUser(user);
+        blog.setUser(getUserFromSecurityContext());
         return this.blogRepository.save(blog);
     }
 
     public void deleteById(UUID id) throws Exception{
         Blog blog = this.getBlogByID(id);
+        this.checkBlogPostBelongsToUser(blog);
         this.blogRepository.delete(blog);
     }
 
     public Blog update(UUID blogId, Blog blog) throws Exception{
         Blog currentBlog = this.getBlogByID(blogId);
+        this.checkBlogPostBelongsToUser(currentBlog);
         currentBlog.setTitle(blog.getTitle());
         currentBlog.setContent(blog.getContent());
         return this.blogRepository.save(currentBlog);
