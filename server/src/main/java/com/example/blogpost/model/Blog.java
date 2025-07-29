@@ -1,32 +1,32 @@
 package com.example.blogpost.model;
 
+import com.example.blogpost.model.common.CommonModel;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
+import java.util.List;
 
 @Entity
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name="blogs")
-public class Blog {
-    @Id
-    @GeneratedValue
-    private UUID id;
+public class Blog extends CommonModel {
     private String title;
     private String content;
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private User user;
+    private User author;
+
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name="blog_tags",
+            joinColumns = @JoinColumn(name = "blog_id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id")
+    )
+    private List<Tag> tags;
 }

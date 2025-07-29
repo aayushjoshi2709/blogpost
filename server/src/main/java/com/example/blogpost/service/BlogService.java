@@ -1,13 +1,11 @@
 package com.example.blogpost.service;
 
 import com.example.blogpost.model.Blog;
+import com.example.blogpost.model.Tag;
 import com.example.blogpost.model.User;
-import com.example.blogpost.model.UserPrincipal;
 import com.example.blogpost.repository.BlogRepository;
+import com.example.blogpost.utils.Utils;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -17,33 +15,31 @@ import java.util.UUID;
 @Service
 public class BlogService {
     public final BlogRepository blogRepository;
-    private final UserService userService;
+    private final Utils utils;
+    private final TagService tagService;
 
-    BlogService(BlogRepository blogRepository, UserService userService) {
+    BlogService(BlogRepository blogRepository, Utils utils, TagService tagService) {
         this.blogRepository = blogRepository;
-        this.userService = userService;
+        this.utils = utils;
+        this.tagService = tagService;
     }
 
     private Blog getBlogByID(UUID id) throws ResponseStatusException{
         return this.blogRepository.findById(id).orElseThrow(
-                () -> {
-                    System.out.println("throwing exception");
-                    return new ResponseStatusException(HttpStatus.NOT_FOUND, "Blog not found!");
-                }
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Blog not found!")
         );
     }
 
-    private User getUserFromSecurityContext(){
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        UserPrincipal userPrincipal = (UserPrincipal) auth.getPrincipal();
-        return userService.findByUsername(userPrincipal.getUsername());
+    private void checkBlogPostBelongsToUser(Blog currentBlog) throws ResponseStatusException{
+        User user = this.utils.getUserFromSecurityContext();
+        if(!currentBlog.getAuthor().getId().equals(user.getId())){
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "You are not allowed to perform this action!");
+        }
     }
 
-    private void checkBlogPostBelongsToUser(Blog currentBlog) throws ResponseStatusException{
-        User user = getUserFromSecurityContext();
-        if(!currentBlog.getUser().getId().equals(user.getId())){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Blog post does not belong to this user");
-        }
+    private List<Tag> fetchTags(List<Tag> tags){
+        List<UUID> tagIds = tags.stream().map(Tag::getId).toList();
+        return this.tagService.fetchTagsByIds(tagIds);
     }
 
     public List<Blog> findAll(){
@@ -55,7 +51,9 @@ public class BlogService {
     }
 
     public Blog create(Blog blog){
-        blog.setUser(getUserFromSecurityContext());
+        blog.setAuthor(this.utils.getUserFromSecurityContext());
+        List<Tag> fetchedTags = this.fetchTags(blog.getTags());
+        blog.setTags(fetchedTags);
         return this.blogRepository.save(blog);
     }
 
@@ -68,8 +66,25 @@ public class BlogService {
     public Blog update(UUID blogId, Blog blog) throws ResponseStatusException{
         Blog currentBlog = this.getBlogByID(blogId);
         this.checkBlogPostBelongsToUser(currentBlog);
-        currentBlog.setTitle(blog.getTitle());
-        currentBlog.setContent(blog.getContent());
-        return this.blogRepository.save(currentBlog);
+
+        String title = blog.getTitle();
+        if(title != null && !title.isEmpty() && !title.equals(currentBlog.getTitle())){
+            currentBlog.setTitle(title);
+        }
+
+        String content = blog.getContent();
+        if(content != null && !content.isEmpty() && !content.equals(currentBlog.getContent())){
+            currentBlog.setContent(content);
+        }
+
+        List<Tag> tags = blog.getTags();
+        if(tags != null && !tags.isEmpty() && !tags.equals(currentBlog.getTags())){
+            List<Tag> fetchedTags = this.fetchTags(tags);
+            currentBlog.setTags(fetchedTags);
+        }
+
+        Blog resultantBlog = this.blogRepository.save(currentBlog);
+        resultantBlog.getTags().size();
+        return resultantBlog;
     }
 }

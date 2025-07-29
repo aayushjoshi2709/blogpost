@@ -40,7 +40,7 @@ public class BlogController {
     }
 
     @DeleteMapping("/{blogId}")
-    public ResponseEntity<?> deleteBlog(@PathVariable UUID blogId){
+    public ResponseEntity<Map<String, String>> deleteBlog(@PathVariable UUID blogId){
         this.blogService.deleteById(blogId);
         Map<String,String> responseMap = new HashMap<>(){{
             put("message", "Blog deleted successfully!");

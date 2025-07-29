@@ -39,7 +39,7 @@ public class SecurityConfig {
                                 "/api/v1/users/register",
                                 "/api/v1/users/login"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/blogs/**","/api/v1/blogs")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/blogs/**","/api/v1/blogs","/api/v1/tags/**","/api/v1/tags")
                         .permitAll()
                         .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
